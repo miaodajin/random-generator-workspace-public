@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>随机生成器工作台（公开版）</title>
+  <link rel="stylesheet" href="./generator_workspace.css" />
+</head>
+<body>
+  <div class="workspace-shell" data-active-panel="background" data-private-mode="collapsed">
+    <header class="workspace-topbar">
+      <div class="topbar-row">
+        <div class="brand-cluster">
+          <div class="brand-copy">
+            <p class="brand-kicker">Generator Studio</p>
+            <h1>随机生成器工作台</h1>
+            <p class="brand-description">统一管理人物背景、性格与人物外观。公开版默认隐藏私密部位与偏好档案，需要时可从顶部按钮展开。</p>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="btn-ghost btn-compact workspace-action workspace-private-toggle" id="workspacePrivateToggle" type="button">设定私密部位与偏好</button>
+          <button class="btn-ghost workspace-action" id="workspaceChainButton" type="button">串联生成</button>
+          <button class="btn-solid workspace-action" id="workspaceExportButton" type="button">导出人物包</button>
+        </div>
+      </div>
+
+      <nav class="generator-nav" aria-label="随机生成器列表">
+        <button class="generator-tab active" type="button" data-panel="background" data-theme="background">
+          <span class="tab-line" aria-hidden="true"></span>
+          <span class="tab-icon" aria-hidden="true">背</span>
+          <span class="tab-copy">
+            <strong>人物背景</strong>
+            <small>人口学与生活节奏</small>
+          </span>
+        </button>
+        <button class="generator-tab" type="button" data-panel="personality" data-theme="personality">
+          <span class="tab-line" aria-hidden="true"></span>
+          <span class="tab-icon" aria-hidden="true">格</span>
+          <span class="tab-copy">
+            <strong>性格档案</strong>
+            <small>核心维度与桥接层</small>
+          </span>
+        </button>
+        <button class="generator-tab" type="button" data-panel="body" data-theme="body">
+          <span class="tab-line" aria-hidden="true"></span>
+          <span class="tab-icon" aria-hidden="true">体</span>
+          <span class="tab-copy">
+            <strong>人物外观</strong>
+            <small>整体轮廓到手足</small>
+          </span>
+        </button>
+        <button class="generator-tab" type="button" data-panel="appearance" data-theme="appearance" data-private-panel="true">
+          <span class="tab-line" aria-hidden="true"></span>
+          <span class="tab-icon" aria-hidden="true">密</span>
+          <span class="tab-copy">
+            <strong>私密部位</strong>
+            <small>胸部、性器官、肛门</small>
+          </span>
+        </button>
+        <button class="generator-tab" type="button" data-panel="fetish" data-theme="fetish" data-private-panel="true">
+          <span class="tab-line" aria-hidden="true"></span>
+          <span class="tab-icon" aria-hidden="true">偏</span>
+          <span class="tab-copy">
+            <strong>偏好档案</strong>
+            <small>标签库原生生成</small>
+          </span>
+        </button>
+        <button class="generator-tab" type="button" data-panel="relationship" data-theme="relationship">
+          <span class="tab-line" aria-hidden="true"></span>
+          <span class="tab-icon" aria-hidden="true">链</span>
+          <span class="tab-copy">
+            <strong>关系动态</strong>
+            <small>预留位</small>
+          </span>
+        </button>
+      </nav>
+
+      <div class="workspace-statusbar">
+        <p id="workspaceActionStatus">当前默认从人物背景开始。公开版默认只串联 背景 → 性格 → 人物外观；如需补充私密部位与偏好档案，可点击顶部按钮展开。</p>
+      </div>
+    </header>
+
+    <main class="workspace-main">
+      <section class="workspace-panel" id="panel-body" data-panel="body" data-theme="body">
+        <header class="panel-hero">
+          <div class="panel-heading">
+            <p class="panel-kicker">Body Appearance</p>
+            <h2>人物外观生成器</h2>
+            <p class="panel-lead">从整体轮廓、面部结构、口腔到腹臀腿与手足，按模块输出完整身体外观卡片。</p>
+          </div>
+          <div class="panel-side">
+            <div class="panel-badges">
+              <span class="panel-badge">模块化生成</span>
+              <span class="panel-badge subtle">支持模块重刷</span>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-chip">
+                <strong id="bodyAppearanceStatModules">0</strong>
+                <span>模块数量</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="bodyAppearanceStatFields">0</strong>
+                <span>字段数量</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="bodyAppearanceStatLinks">0</strong>
+                <span>联动规则</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <details class="sheet-card controls-sheet" data-panel="body" open>
+          <summary class="controls-summary">
+            <span class="summary-label">生成控制</span>
+            <span class="summary-values">单角色 · 联动人物待选 · 体态随机</span>
+            <span class="summary-toggle">展开</span>
+          </summary>
+          <div class="sheet-body">
+            <div class="sheet-head">
+              <h3>生成控制</h3>
+              <p>可完全随机，也可跟随当前背景人物的年龄段、性别认同和体态主型。</p>
+            </div>
+
+            <div class="control-grid">
+              <label class="control-field">
+                <span>联动人物</span>
+                <select id="bodyAppearanceProfileSelect"></select>
+              </label>
+
+              <label class="control-field">
+                <span>年龄段</span>
+                <select id="bodyAppearanceAgeGroup"></select>
+              </label>
+
+              <label class="control-field">
+                <span>性别认同</span>
+                <select id="bodyAppearanceGender"></select>
+              </label>
+
+              <label class="control-field">
+                <span>体态主型</span>
+                <select id="bodyAppearanceBodyType"></select>
+              </label>
+
+              <label class="control-field seed-field">
+                <span>种子</span>
+                <input id="bodyAppearanceSeed" type="text" placeholder="留空自动" />
+              </label>
+            </div>
+
+            <div class="control-actions">
+              <button class="btn-solid" id="bodyAppearanceGenerateButton" type="button">生成人物外观</button>
+              <button class="btn-ghost" id="bodyAppearanceUseLinkedButton" type="button">读取联动人物</button>
+              <button class="btn-ghost" id="bodyAppearanceExportButton" type="button">导出 JSON</button>
+            </div>
+          </div>
+        </details>
+
+        <section class="result-zone">
+          <div class="section-bar">
+            <div>
+              <h3>生成结果</h3>
+              <p class="section-caption">外观卡位可锁定、可手选字段、可模块级重刷，并在背景与性格确定后继续补齐人物轮廓。</p>
+            </div>
+            <span class="section-meta" id="bodyAppearanceResultMeta">尚未生成</span>
+          </div>
+
+          <div class="results-grid" id="bodyAppearanceResults">
+            <div class="empty-state">
+              <p class="empty-title">人物外观还没生成</p>
+              <p class="empty-copy">先点“生成人物外观”，这里会出现完整的模块化外观卡。</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel active" id="panel-background" data-panel="background" data-theme="background">
+        <header class="panel-hero">
+          <div class="panel-heading">
+            <p class="panel-kicker">Background Matrix</p>
+            <h2>人物背景生成器</h2>
+            <p class="panel-lead">把常住城市、成长地区、教育与职业、关系状态和生活节奏拉成可信的人物底盘。</p>
+          </div>
+          <div class="panel-side">
+            <div class="panel-badges">
+              <span class="panel-badge">本地数据</span>
+              <span class="panel-badge subtle">工作链中枢</span>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-chip">
+                <strong id="bgStatCities">0</strong>
+                <span>城市条目</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="bgStatRegions">0</strong>
+                <span>成长地区</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="bgStatFields">0</strong>
+                <span>字段数量</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <details class="sheet-card controls-sheet" data-panel="background" open>
+          <summary class="controls-summary">
+            <span class="summary-label">生成控制</span>
+            <span class="summary-values">单角色 · 年龄随机 · 性别随机 · 城市随机</span>
+            <span class="summary-toggle">展开</span>
+          </summary>
+          <div class="sheet-body">
+            <div class="sheet-head">
+              <h3>生成控制</h3>
+              <p>可固定部分条件，其余字段保留随机与规则联动。</p>
+            </div>
+
+            <div class="control-grid">
+              <label class="control-field">
+                <span>年龄段</span>
+                <select id="bgAgeGroup"></select>
+              </label>
+
+              <label class="control-field">
+                <span>性别认同</span>
+                <select id="bgGender"></select>
+              </label>
+
+              <label class="control-field">
+                <span>城市层级</span>
+                <select id="bgCityTier"></select>
+              </label>
+
+              <label class="control-field">
+                <span>成长地区</span>
+                <select id="bgGrowthRegion"></select>
+              </label>
+
+              <label class="control-field seed-field">
+                <span>种子</span>
+                <input id="bgSeed" type="text" placeholder="留空自动" />
+              </label>
+            </div>
+
+            <div class="control-actions">
+              <button class="btn-solid" id="bgGenerateButton" type="button">生成背景档案</button>
+              <button class="btn-ghost" id="bgRandomSeedButton" type="button">换一个种子</button>
+              <button class="btn-ghost" id="bgExportButton" type="button">导出 JSON</button>
+            </div>
+          </div>
+        </details>
+
+        <section class="result-zone">
+          <div class="section-bar">
+            <div>
+              <h3>生成结果</h3>
+              <p class="section-caption">背景卡位是工作台的标准人物槽位，串联、导出和偏好同步都会围绕这里的当前选择展开。</p>
+            </div>
+            <span class="section-meta" id="bgResultMeta">尚未生成</span>
+          </div>
+
+          <div class="results-grid" id="backgroundResults">
+            <div class="empty-state">
+              <p class="empty-title">人物背景档案还没生成</p>
+              <p class="empty-copy">先点上面的“生成背景档案”，这里会出现一组可继续串联的背景卡片。</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel" id="panel-personality" data-panel="personality" data-theme="personality">
+        <header class="panel-hero">
+          <div class="panel-heading">
+            <p class="panel-kicker">Personality Bridge</p>
+            <h2>性格档案生成器</h2>
+            <p class="panel-lead">把核心维度、人际面向、MBTI 与桥接层合并成可直接挂到人物链上的性格快照。</p>
+          </div>
+          <div class="panel-side">
+            <div class="panel-badges">
+              <span class="panel-badge">桥接输出</span>
+              <span class="panel-badge subtle">读取背景上下文</span>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-chip">
+                <strong id="personalityStatModules">0</strong>
+                <span>模块数量</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="personalityStatFields">0</strong>
+                <span>字段数量</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="personalityStatBridge">0</strong>
+                <span>桥接字段</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <details class="sheet-card controls-sheet" data-panel="personality">
+          <summary class="controls-summary">
+            <span class="summary-label">生成控制</span>
+            <span class="summary-values">单角色 · 联动人物待选 · 职业随机</span>
+            <span class="summary-toggle">展开</span>
+          </summary>
+          <div class="sheet-body">
+            <div class="sheet-head">
+              <h3>生成控制</h3>
+              <p>可完全随机，也可跟随背景人物的年龄、性别、职业、婚姻与社交密度。</p>
+            </div>
+
+            <div class="control-grid">
+              <label class="control-field">
+                <span>联动人物</span>
+                <select id="personalityProfileSelect"></select>
+              </label>
+
+              <label class="control-field">
+                <span>年龄段</span>
+                <select id="personalityAgeGroup"></select>
+              </label>
+
+              <label class="control-field">
+                <span>性别认同</span>
+                <select id="personalityGender"></select>
+              </label>
+
+              <label class="control-field">
+                <span>职业大类</span>
+                <select id="personalityOccupation"></select>
+              </label>
+
+              <label class="control-field">
+                <span>社交密度</span>
+                <select id="personalitySocialDensity"></select>
+              </label>
+
+              <label class="control-field">
+                <span>婚姻状况</span>
+                <select id="personalityMaritalStatus"></select>
+              </label>
+
+              <label class="control-field seed-field">
+                <span>种子</span>
+                <input id="personalitySeed" type="text" placeholder="留空自动" />
+              </label>
+            </div>
+
+            <div class="control-actions">
+              <button class="btn-solid" id="personalityGenerateButton" type="button">生成性格档案</button>
+              <button class="btn-ghost" id="personalityUseLinkedButton" type="button">读取联动人物</button>
+              <button class="btn-ghost" id="personalityExportButton" type="button">导出 JSON</button>
+            </div>
+          </div>
+        </details>
+
+        <section class="result-zone">
+          <div class="section-bar">
+            <div>
+              <h3>生成结果</h3>
+              <p class="section-caption">当前选中卡位会成为私密页读取的性格上下文来源。</p>
+            </div>
+            <span class="section-meta" id="personalityResultMeta">尚未生成</span>
+          </div>
+
+          <div class="results-grid" id="personalityResults">
+            <div class="empty-state">
+              <p class="empty-title">性格档案还没生成</p>
+              <p class="empty-copy">先点“生成性格档案”，这里会输出核心维度、MBTI、人际面向和桥接层。</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel" id="panel-relationship" data-panel="relationship" data-theme="relationship">
+        <header class="panel-hero">
+          <div class="panel-heading">
+            <p class="panel-kicker">Reserved Module</p>
+            <h2>关系动态</h2>
+            <p class="panel-lead">这个面板先保留给关系、互动、剧情触发与长期变化，布局与其他面板保持统一。</p>
+          </div>
+          <div class="panel-side">
+            <div class="panel-badges">
+              <span class="panel-badge">预留位</span>
+              <span class="panel-badge subtle">后续接入</span>
+            </div>
+          </div>
+        </header>
+
+        <section class="result-zone">
+          <div class="section-bar">
+            <div>
+              <h3>生成结果</h3>
+              <p class="section-caption">后续可接入关系标签、互动模式、冲突点与长期关系状态。</p>
+            </div>
+            <span class="section-meta">尚未接入</span>
+          </div>
+
+          <div class="results-grid">
+            <div class="empty-state relationship-empty">
+              <p class="empty-title">关系动态模块尚未接入</p>
+              <p class="empty-copy">建议后续加入关系标签、互动模式、冲突点、情绪波动与剧情触发条件。</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel" id="panel-appearance" data-panel="appearance" data-theme="appearance" data-private-panel="true">
+        <header class="panel-hero">
+          <div class="panel-heading">
+            <p class="panel-kicker">Intimate Modules</p>
+            <h2>私密部位生成器</h2>
+            <p class="panel-lead">胸部、性器官与肛门模块独立展开，并可叠加来自背景、外观与性格的上下文。</p>
+          </div>
+          <div class="panel-side">
+            <div class="panel-badges">
+              <span class="panel-badge">跨库联动</span>
+              <span class="panel-badge subtle">读取体态主型</span>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-chip">
+                <strong id="appearanceStatFields">0</strong>
+                <span>字段数量</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="appearanceStatBodyTypes">0</strong>
+                <span>体态主型</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="appearanceStatModes">0</strong>
+                <span>模式组合</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <details class="sheet-card controls-sheet" data-panel="appearance">
+          <summary class="controls-summary">
+            <span class="summary-label">生成控制</span>
+            <span class="summary-values">单角色 · 联动人物待选 · 体态不联动</span>
+            <span class="summary-toggle">展开</span>
+          </summary>
+          <div class="sheet-body">
+            <div class="sheet-head">
+              <h3>生成控制</h3>
+              <p>可以直接随机，也可以跟随背景人物锁定年龄段和性别认同，再从人物外观读取体态主型。</p>
+            </div>
+
+            <div class="control-grid">
+              <label class="control-field">
+                <span>联动人物</span>
+                <select id="appearanceProfileSelect"></select>
+              </label>
+
+              <label class="control-field">
+                <span>年龄段</span>
+                <select id="appearanceAgeGroup"></select>
+              </label>
+
+              <label class="control-field">
+                <span>性别认同</span>
+                <select id="appearanceGender"></select>
+              </label>
+
+              <label class="control-field">
+                <span>体态主型</span>
+                <select id="appearanceBodyType"></select>
+              </label>
+
+              <label class="control-field seed-field">
+                <span>种子</span>
+                <input id="appearanceSeed" type="text" placeholder="留空自动" />
+              </label>
+            </div>
+
+            <div class="control-actions">
+              <button class="btn-solid" id="appearanceGenerateButton" type="button">生成私密档案</button>
+              <button class="btn-ghost" id="appearanceUseLinkedButton" type="button">读取联动人物</button>
+              <button class="btn-ghost" id="appearanceExportButton" type="button">导出 JSON</button>
+            </div>
+          </div>
+        </details>
+
+        <section class="result-zone">
+          <div class="section-bar">
+            <div>
+              <h3>生成结果</h3>
+              <p class="section-caption">每个卡位都能作为当前人物链的一部分被保留、锁定、对比和手选。</p>
+            </div>
+            <span class="section-meta" id="appearanceResultMeta">尚未生成</span>
+          </div>
+
+          <div class="results-grid" id="appearanceResults">
+            <div class="empty-state">
+              <p class="empty-title">私密档案还没生成</p>
+              <p class="empty-copy">点一次生成后，这里会展示胸部、性器官和肛门模块的完整组合。</p>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <section class="workspace-panel" id="panel-fetish" data-panel="fetish" data-theme="fetish" data-private-panel="true">
+        <header class="panel-hero">
+          <div class="panel-heading">
+            <p class="panel-kicker">Native Fetish Tags</p>
+            <h2>偏好档案生成器</h2>
+            <p class="panel-lead">直接在工作台里生成角色偏好档案，保留标签生成、锁定标签、标签树、回收站和自定义原型。</p>
+          </div>
+          <div class="panel-side">
+            <div class="panel-badges">
+              <span class="panel-badge">原生面板</span>
+              <span class="panel-badge subtle">无 iframe</span>
+            </div>
+            <div class="hero-stats">
+              <div class="hero-chip">
+                <strong id="fetishStatTotal">0</strong>
+                <span>标签总量</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="fetishStatPool">0</strong>
+                <span>可抽样</span>
+              </div>
+              <div class="hero-chip">
+                <strong id="fetishStatLocks">0</strong>
+                <span>已锁定</span>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <details class="sheet-card controls-sheet" data-panel="fetish" open>
+          <summary class="controls-summary">
+            <span class="summary-label">生成控制</span>
+            <span class="summary-values">单角色 · 角色类别随机 · 原型随机 · 默认池</span>
+            <span class="summary-toggle">展开</span>
+          </summary>
+          <div class="sheet-body">
+            <div class="sheet-head">
+              <h3>生成控制</h3>
+              <p>工作台原生版偏好档案生成器会从标签库抽样，并允许你手动锁定条目、回收标签和保存自定义原型。</p>
+            </div>
+
+            <div class="control-grid">
+              <label class="control-field">
+                <span>角色类别</span>
+                <select id="fetishRoleClass">
+                  <option value="随机" selected>随机</option>
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="Switch">Switch</option>
+                </select>
+              </label>
+
+              <label class="control-field">
+                <span>原型</span>
+                <select id="fetishArchetypeSelect"></select>
+              </label>
+
+              <label class="control-field">
+                <span>联动人物</span>
+                <select id="fetishProfileSelect"></select>
+              </label>
+
+              <label class="control-field seed-field">
+                <span>联动种子</span>
+                <input id="fetishSeedBridge" type="text" readonly />
+              </label>
+
+              <label class="control-field seed-field">
+                <span>生成种子</span>
+                <input id="fetishSeed" type="text" placeholder="留空自动" />
+              </label>
+
+              <label class="control-field toggle-field">
+                <span>审慎项</span>
+                <input id="fetishIncludeReviewed" type="checkbox" />
+              </label>
+            </div>
+
+            <div class="control-actions">
+              <button class="btn-solid" id="fetishGenerateButton" type="button">生成偏好档案</button>
+              <button class="btn-ghost" id="fetishRandomSeedButton" type="button">换一批</button>
+              <button class="btn-ghost" id="fetishExportButton" type="button">导出 JSON</button>
+              <button class="btn-ghost" id="fetishApplyBridgeButton" type="button">同步当前人物</button>
+              <button class="btn-ghost" id="fetishReloadFrameButton" type="button">重置面板</button>
+            </div>
+            <div id="fetishSummary" hidden></div>
+          </div>
+        </details>
+
+        <section class="result-zone">
+          <div class="section-bar">
+            <div>
+              <h3>生成结果</h3>
+              <p class="section-caption">偏好卡片可锁定槽位、可删除标签，也能继续从右侧标签树持续加料。</p>
+            </div>
+            <span class="section-meta" id="fetishResultMeta">尚未生成</span>
+          </div>
+
+          <div class="fetish-layout">
+            <div class="results-grid fetish-results" id="fetishResults">
+              <div class="empty-state">
+                <p class="empty-title">偏好档案还没生成</p>
+                <p class="empty-copy">先点“生成偏好档案”，这里会出现角色身份、取向标签、行为偏好、场景偏好与边界道具卡片。</p>
+              </div>
+            </div>
+
+            <aside class="fetish-sidebar">
+              <section class="sheet-card fetish-sidecard" id="fetishLockCard">
+                <div class="sheet-head compact">
+                  <h3>已锁定标签</h3>
+                  <span class="section-meta" id="fetishLockCountBadge">0</span>
+                </div>
+                <div class="fetish-lock-list" id="fetishLockSummary"></div>
+              </section>
+
+              <section class="sheet-card fetish-sidecard">
+                <div class="sheet-head compact">
+                  <h3>标签树</h3>
+                  <span class="section-meta" id="fetishTagTreeCount">0</span>
+                </div>
+                <label class="control-field search-field">
+                  <span>搜索标签</span>
+                  <input id="fetishTagTreeSearch" type="text" placeholder="搜索标签、分类或英文名" />
+                </label>
+                <div class="tag-tree" id="fetishTagTree"></div>
+              </section>
+
+              <section class="sheet-card fetish-sidecard">
+                <div class="sheet-head compact">
+                  <h3>回收站</h3>
+                  <span class="section-meta" id="fetishTrashCount">0</span>
+                </div>
+                <div class="trash-list" id="fetishTrashList"></div>
+                <div class="control-actions compact">
+                  <button class="btn-ghost" id="fetishEmptyTrashButton" type="button">清空回收站</button>
+                </div>
+              </section>
+
+              <section class="sheet-card fetish-sidecard">
+                <div class="sheet-head compact">
+                  <h3>自定义原型</h3>
+                  <p>把当前锁定组合保存成以后可重复调用的原型。</p>
+                </div>
+                <div class="control-grid single-column">
+                  <label class="control-field">
+                    <span>原型名称</span>
+                    <input id="fetishCustomArchName" type="text" placeholder="例如：礼仪支配者" />
+                  </label>
+                  <label class="control-field">
+                    <span>角色类别</span>
+                    <select id="fetishCustomArchRole">
+                      <option value="S">S</option>
+                      <option value="M">M</option>
+                      <option value="Switch" selected>Switch</option>
+                    </select>
+                  </label>
+                </div>
+                <div class="control-actions compact">
+                  <button class="btn-solid" id="fetishAddCustomArchButton" type="button">保存当前原型</button>
+                </div>
+                <div class="custom-arch-list" id="fetishCustomArchList"></div>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div class="workspace-toast-stack" id="workspaceToastStack" aria-live="polite" aria-atomic="true"></div>
+  </div>
+
+  <script src="./role_generator_name_data.js"></script>
+  <script src="./character_background_data.js"></script>
+  <script src="./character_body_appearance_data.js"></script>
+  <script src="./character_personality_data.js"></script>
+  <script src="./intimate_catalog_data.js"></script>
+  <script src="./role_generator_frontend_data.js"></script>
+  <script src="./generator_workspace.js"></script>
+  <script src="./body_appearance_workspace.js"></script>
+  <script src="./intimate_generator_workspace.js"></script>
+  <script src="./personality_workspace.js"></script>
+  <script src="./fetish_workspace.js"></script>
+  <script src="./generator_workspace_ui.js"></script>
+</body>
+</html>
